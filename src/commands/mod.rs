@@ -1,5 +1,5 @@
-mod parser;
 pub mod config;
+mod parser;
 
 use async_trait::async_trait;
 use serenity::{

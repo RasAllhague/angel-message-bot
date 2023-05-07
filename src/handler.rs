@@ -1,12 +1,10 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{collections::HashMap, sync::Arc};
 
 use serenity::{
     async_trait,
     model::prelude::{
-        command::Command,
-        interaction::{
-            Interaction,
-        }, Ready, ResumedEvent, GuildId, UserId, ChannelId, MessageId,
+        command::Command, interaction::Interaction, ChannelId, GuildId, MessageId, Ready,
+        ResumedEvent, UserId,
     },
     prelude::{Context, EventHandler},
 };
@@ -15,9 +13,7 @@ use tracing::{
     log::{debug, error},
 };
 
-use crate::{
-    commands::{SlashCommand}, config::AppConfig,
-};
+use crate::{commands::SlashCommand, config::AppConfig};
 
 pub struct BotHandler {
     pub commands: Vec<Arc<dyn SlashCommand>>,
@@ -66,10 +62,7 @@ impl EventHandler for BotHandler {
                 .iter()
                 .filter(|x| x.name() == command_interaction.data.name)
             {
-                if let Err(why) = command
-                    .dispatch(&command_interaction, &ctx, &conf)
-                    .await
-                {
+                if let Err(why) = command.dispatch(&command_interaction, &ctx, &conf).await {
                     error!("Error during command interaction: {:?}", why);
                 }
             }
@@ -111,15 +104,24 @@ impl EventHandler for BotHandler {
                 Ok(message) => message,
                 Err(why) => {
                     error!("Error while fetching message: {}", why);
-                    
+
                     return;
                 }
             };
 
-            if let Some(target_channel) = self.app_config.deleted_message_send_channels.get(&guild_id) {
+            if let Some(target_channel) =
+                self.app_config.deleted_message_send_channels.get(&guild_id)
+            {
                 if let Err(why) = target_channel
-                    .send_message(&ctx, |create_message| create_message.content(message.content)).await {
-                    error!("Failed to send deleted message to channel, '{}': {}", target_channel.0, why);
+                    .send_message(&ctx, |create_message| {
+                        create_message.content(message.content)
+                    })
+                    .await
+                {
+                    error!(
+                        "Failed to send deleted message to channel, '{}': {}",
+                        target_channel.0, why
+                    );
                 }
             }
         }

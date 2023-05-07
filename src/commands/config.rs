@@ -1,10 +1,19 @@
 use async_trait::async_trait;
-use serenity::{prelude::*, model::prelude::{interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType}, command::CommandOptionType}, builder::{CreateApplicationCommands, CreateApplicationCommand}};
+use serenity::{
+    builder::{CreateApplicationCommand, CreateApplicationCommands},
+    model::prelude::{
+        command::CommandOptionType,
+        interaction::{
+            application_command::ApplicationCommandInteraction, InteractionResponseType,
+        },
+    },
+    prelude::*,
+};
 use tracing::info;
 
-use crate::{handler::Configuration, commands::parser::OptionParser, config::AppConfig};
+use crate::{commands::parser::OptionParser, config::AppConfig, handler::Configuration};
 
-use super::{SlashCommand, CommandError};
+use super::{CommandError, SlashCommand};
 
 static COMMAND_NAME: &str = "config";
 
@@ -36,7 +45,7 @@ impl SlashCommand for ConfigCommand {
         let channel_id = OptionParser::parse_channel_id(&command.data.options, 0)?;
 
         let mut channels = configuration.send_channels.clone();
-    
+
         if let None = command.guild_id {
             return Ok(());
         }
@@ -53,9 +62,7 @@ impl SlashCommand for ConfigCommand {
         info!("Updated config for guild: {:?}", command.guild_id);
 
         command
-            .edit_original_interaction_response(ctx, |m| {
-                m.content("Updated!")
-            })
+            .edit_original_interaction_response(ctx, |m| m.content("Updated!"))
             .await?;
 
         Ok(())

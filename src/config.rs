@@ -1,4 +1,4 @@
-use std::{env, collections::HashMap, fs};
+use std::{collections::HashMap, env, fs};
 
 use serde::{Deserialize, Serialize};
 use serenity::model::prelude::{ChannelId, GuildId, UserId};
@@ -14,8 +14,8 @@ pub struct EnvironmentConfigurations {
 impl EnvironmentConfigurations {
     pub fn from_env() -> EnvironmentConfigurations {
         let token = env::var("ANGEL_BOT_TOKEN").expect("Expected bot token in the environment!");
-        let config_path =
-            env::var("ANGEL_BOT_CONFIGFILE").expect("Expected angel bot config in the environment!");
+        let config_path = env::var("ANGEL_BOT_CONFIGFILE")
+            .expect("Expected angel bot config in the environment!");
 
         EnvironmentConfigurations {
             bot_token: token,
@@ -38,7 +38,7 @@ impl AppConfig {
 
         Ok(file)
     }
-    
+
     pub async fn save(&self, file_path: &str) -> Result<(), CommandError> {
         let serialized = serde_json::to_string(&self)?;
 

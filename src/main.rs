@@ -1,15 +1,15 @@
-use std::{sync::Arc, path::Path, collections::HashMap};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
-use commands::{SlashCommand, config::ConfigCommand, CommandError};
-use config::{EnvironmentConfigurations, AppConfig};
+use commands::{config::ConfigCommand, CommandError, SlashCommand};
+use config::{AppConfig, EnvironmentConfigurations};
 use handler::BotHandler;
-use serenity::{prelude::*, model::prelude::UserId};
+use serenity::{model::prelude::UserId, prelude::*};
 use tracing::{instrument, log::error};
 
 mod commands;
-mod utils;
 mod config;
 mod handler;
+mod utils;
 
 #[tokio::main]
 #[instrument]
@@ -32,9 +32,15 @@ async fn main() -> Result<(), CommandError> {
     let mut commands: Vec<Arc<dyn SlashCommand>> = Vec::new();
     commands.push(Arc::new(ConfigCommand));
 
-    let intents = GatewayIntents::default() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES;
+    let intents = GatewayIntents::default()
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGES;
     let mut client = Client::builder(env_config.bot_token, intents)
-        .event_handler(BotHandler::new(&commands, app_config, &env_config.config_path))
+        .event_handler(BotHandler::new(
+            &commands,
+            app_config,
+            &env_config.config_path,
+        ))
         .await
         .expect("Err creating client");
 
