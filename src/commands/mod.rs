@@ -1,4 +1,5 @@
 mod parser;
+pub mod config;
 
 use async_trait::async_trait;
 use serenity::{
@@ -28,9 +29,16 @@ pub trait SlashCommand: Send + Sync {
 
 #[derive(Debug)]
 pub enum CommandError {
+    Serde(serde_json::Error),
     Parser(ParserError),
     Serenity(serenity::Error),
     IO(std::io::Error),
+}
+
+impl From<serde_json::Error> for CommandError {
+    fn from(value: serde_json::Error) -> Self {
+        CommandError::Serde(value)
+    }
 }
 
 impl From<ParserError> for CommandError {

@@ -17,7 +17,7 @@ pub enum ParserError {
 pub struct UserInputParser;
 
 impl UserInputParser {
-    pub fn parse(&self, options: &[CommandDataOption], index: usize) -> Result<User, ParserError> {
+    pub fn parse(options: &[CommandDataOption], index: usize) -> Result<User, ParserError> {
         if let Some(option) = options.get(index) {
             if let Some(value) = option.resolved.as_ref() {
                 if let CommandDataOptionValue::User(data, _) = value {
@@ -40,7 +40,7 @@ impl UserInputParser {
 pub struct DateInputParser;
 
 impl DateInputParser {
-    pub fn parse(&self, options: &[CommandDataOption]) -> Result<NaiveDateTime, ParserError> {
+    pub fn parse(options: &[CommandDataOption]) -> Result<NaiveDateTime, ParserError> {
         let date_parts: Result<Vec<i64>, String> =
             (0..3).map(|x| Self::get_int_option(options, x)).collect();
 
@@ -76,7 +76,6 @@ pub struct OptionParser;
 
 impl OptionParser {
     pub fn parse_channel_id(
-        &self,
         options: &[CommandDataOption],
         index: usize,
     ) -> Result<ChannelId, ParserError> {
@@ -95,7 +94,6 @@ impl OptionParser {
     }
 
     pub fn parse_string(
-        &self,
         options: &[CommandDataOption],
         index: usize,
     ) -> Result<String, ParserError> {

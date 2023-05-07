@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::{sync::Arc, path::Path, collections::HashMap};
 
-use commands::SlashCommand;
-use config::AppConfigurations;
+use commands::{SlashCommand, config::ConfigCommand, CommandError};
+use config::{EnvironmentConfigurations, AppConfig};
 use handler::BotHandler;
-use serenity::prelude::*;
+use serenity::{prelude::*, model::prelude::UserId};
 use tracing::{instrument, log::error};
 
 mod commands;
@@ -13,19 +13,34 @@ mod handler;
 
 #[tokio::main]
 #[instrument]
-async fn main() {
+async fn main() -> Result<(), CommandError> {
     tracing_subscriber::fmt::init();
 
-    let config = AppConfigurations::from_env();
+    let env_config = EnvironmentConfigurations::from_env();
+
+    if !Path::new(&env_config.config_path).exists() {
+        let app_config = AppConfig {
+            deleted_message_send_channels: HashMap::new(),
+            observed_user_id: UserId(714599597829390459),
+        };
+
+        app_config.save(&env_config.config_path).await?;
+    }
+
+    let app_config = AppConfig::load(&env_config.config_path).await?;
+
     let mut commands: Vec<Arc<dyn SlashCommand>> = Vec::new();
+    commands.push(Arc::new(ConfigCommand));
 
     let intents = GatewayIntents::default() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES;
-    let mut client = Client::builder(config.bot_token, intents)
-        .event_handler(BotHandler::new(&commands))
+    let mut client = Client::builder(env_config.bot_token, intents)
+        .event_handler(BotHandler::new(&commands, app_config, &env_config.config_path))
         .await
         .expect("Err creating client");
 
     if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);
     }
+
+    Ok(())
 }

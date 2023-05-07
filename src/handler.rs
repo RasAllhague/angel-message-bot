@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, collections::HashMap};
 
 use serenity::{
     async_trait,
@@ -6,8 +6,7 @@ use serenity::{
         command::Command,
         interaction::{
             Interaction,
-        },
-        EmojiId, Message, ReactionType, Ready, ResumedEvent,
+        }, Ready, ResumedEvent, GuildId, UserId, ChannelId, MessageId,
     },
     prelude::{Context, EventHandler},
 };
@@ -17,21 +16,31 @@ use tracing::{
 };
 
 use crate::{
-    commands::{SlashCommand},
+    commands::{SlashCommand}, config::AppConfig,
 };
 
 pub struct BotHandler {
     pub commands: Vec<Arc<dyn SlashCommand>>,
+    pub app_config: AppConfig,
+    pub settings_file_path: String,
 }
 
-pub struct Configuration;
+pub struct Configuration {
+    pub observed_users: UserId,
+    pub send_channels: HashMap<GuildId, ChannelId>,
+    pub file_path: String,
+}
 
 impl BotHandler {
     pub fn new(
         commands: &[Arc<dyn SlashCommand>],
+        app_config: AppConfig,
+        file_path: &str,
     ) -> BotHandler {
         BotHandler {
             commands: commands.into(),
+            app_config: app_config,
+            settings_file_path: String::from(file_path),
         }
     }
 }
@@ -46,7 +55,11 @@ impl EventHandler for BotHandler {
                 return;
             }
 
-            let conf = Configuration;
+            let conf = Configuration {
+                observed_users: self.app_config.observed_user_id.clone(),
+                send_channels: self.app_config.deleted_message_send_channels.clone(),
+                file_path: self.settings_file_path.clone(),
+            };
 
             for command in self
                 .commands
@@ -86,37 +99,29 @@ impl EventHandler for BotHandler {
         debug!("Resumed; trace: {:?}", resume.trace);
     }
 
-    async fn message(&self, ctx: Context, msg: Message) {
-        if let Err(why) = react_to_messages(ctx, msg).await {
-            error!("Error while reacting to message: {}", why);
+    async fn message_delete(
+        &self,
+        ctx: Context,
+        channel_id: ChannelId,
+        deleted_message_id: MessageId,
+        guild_id: Option<GuildId>,
+    ) {
+        if let Some(guild_id) = guild_id {
+            let message = match channel_id.message(&ctx, deleted_message_id).await {
+                Ok(message) => message,
+                Err(why) => {
+                    error!("Error while fetching message: {}", why);
+                    
+                    return;
+                }
+            };
+
+            if let Some(target_channel) = self.app_config.deleted_message_send_channels.get(&guild_id) {
+                if let Err(why) = target_channel
+                    .send_message(&ctx, |create_message| create_message.content(message.content)).await {
+                    error!("Failed to send deleted message to channel, '{}': {}", target_channel.0, why);
+                }
+            }
         }
     }
-}
-
-pub async fn react_to_messages(ctx: Context, msg: Message) -> Result<(), serenity::Error> {
-    if msg.content.to_lowercase().contains("stalweidism") {
-        msg.react(
-            &ctx,
-            ReactionType::Custom {
-                animated: false,
-                id: EmojiId(767402279539441684),
-                name: Some(String::from("doy")),
-            },
-        )
-        .await?;
-
-        msg.react(
-            &ctx,
-            ReactionType::Custom {
-                animated: false,
-                id: EmojiId(848665642713874472),
-                name: Some(String::from("FGuOoDoY")),
-            },
-        )
-        .await?;
-
-        info!("Reacted to message.");
-    }
-
-    Ok(())
 }

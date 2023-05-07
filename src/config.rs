@@ -1,23 +1,50 @@
-use std::env;
+use std::{env, collections::HashMap, fs};
 
-pub struct AppConfigurations {
+use serde::{Deserialize, Serialize};
+use serenity::model::prelude::{ChannelId, GuildId, UserId};
+use tokio::{fs::File, io::AsyncWriteExt};
+
+use crate::commands::CommandError;
+
+pub struct EnvironmentConfigurations {
     pub bot_token: String,
-    pub database_url: String,
-    pub lls_file_path: String,
+    pub config_path: String,
 }
 
-impl AppConfigurations {
-    pub fn from_env() -> AppConfigurations {
-        let token = env::var("WALTER_BOT_TOKEN").expect("Expected a token in the environment!");
-        let db_url =
-            env::var("WALTER_DATABASE_URL").expect("Expected database url in the environment!");
-        let lls_file_path =
-            env::var("WALTER_LLS_PATH").expect("Expected walter lls path in the environment!");
+impl EnvironmentConfigurations {
+    pub fn from_env() -> EnvironmentConfigurations {
+        let token = env::var("ANGEL_BOT_TOKEN").expect("Expected bot token in the environment!");
+        let config_path =
+            env::var("ANGEL_BOT_CONFIGFILE").expect("Expected angel bot config in the environment!");
 
-        AppConfigurations {
+        EnvironmentConfigurations {
             bot_token: token,
-            database_url: db_url,
-            lls_file_path: lls_file_path,
+            config_path,
         }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AppConfig {
+    pub observed_user_id: UserId,
+    pub deleted_message_send_channels: HashMap<GuildId, ChannelId>,
+}
+
+impl AppConfig {
+    pub async fn load(file_path: &str) -> Result<Self, CommandError> {
+        let contents = fs::read_to_string(file_path)?;
+
+        let file: Self = serde_json::from_str(&contents)?;
+
+        Ok(file)
+    }
+    
+    pub async fn save(&self, file_path: &str) -> Result<(), CommandError> {
+        let serialized = serde_json::to_string(&self)?;
+
+        let mut file = File::create(file_path).await?;
+        file.write_all(serialized.as_bytes()).await?;
+
+        Ok(())
     }
 }
