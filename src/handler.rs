@@ -1,12 +1,12 @@
 use std::{collections::HashMap, sync::Arc};
 
-use chrono::{Duration, Utc, TimeZone, LocalResult, Days};
+use chrono::{Utc, Days};
 use serenity::{
     async_trait,
-    model::{prelude::{
+    model::prelude::{
         command::Command, interaction::Interaction, ChannelId, GuildId, MessageId, Ready,
         ResumedEvent, UserId, Message,
-    }, Timestamp},
+    },
     prelude::{Context, EventHandler},
 };
 use tracing::{
@@ -14,7 +14,7 @@ use tracing::{
     log::{debug, error, warn},
 };
 
-use crate::{commands::SlashCommand, config::AppConfig, message_storage::{MessageStorage, self}};
+use crate::{commands::SlashCommand, config::AppConfig, message_storage::{MessageStorage}};
 
 static FILENAME: &str = "message_storage.json";
 
@@ -95,7 +95,7 @@ impl EventHandler for BotHandler {
         debug!("Resumed; trace: {:?}", resume.trace);
     }
 
-    async fn message(&self, ctx: Context, new_message: Message) {
+    async fn message(&self, _: Context, new_message: Message) {
         if new_message.author.id != self.app_config.observed_user_id {
             return;
         }
