@@ -10,6 +10,7 @@ mod commands;
 mod config;
 mod handler;
 mod utils;
+mod message_storage;
 
 #[tokio::main]
 #[instrument]

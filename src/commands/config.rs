@@ -69,7 +69,7 @@ impl SlashCommand for ConfigCommand {
     }
 
     fn name(&self) -> String {
-        todo!()
+        String::from(COMMAND_NAME)
     }
 }
 
@@ -80,8 +80,8 @@ impl ConfigCommand {
             .description("Command for nuking an entire channel with a timeout nuke.")
             .create_option(|sub_command| {
                 sub_command
-                    .name("minutes-in-past")
-                    .description("Timeframe of messages.")
+                    .name("target-channel")
+                    .description("Channel where to send his deleted messages.")
                     .kind(CommandOptionType::Channel)
                     .required(true)
             })

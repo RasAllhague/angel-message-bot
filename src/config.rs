@@ -1,8 +1,8 @@
-use std::{collections::HashMap, env, fs};
+use std::{collections::HashMap, env};
 
 use serde::{Deserialize, Serialize};
 use serenity::model::prelude::{ChannelId, GuildId, UserId};
-use tokio::{fs::File, io::AsyncWriteExt};
+use tokio::{fs::{File, self}, io::AsyncWriteExt};
 
 use crate::commands::CommandError;
 
@@ -32,7 +32,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub async fn load(file_path: &str) -> Result<Self, CommandError> {
-        let contents = fs::read_to_string(file_path)?;
+        let contents = fs::read_to_string(file_path).await?;
 
         let file: Self = serde_json::from_str(&contents)?;
 
