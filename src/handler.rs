@@ -1,4 +1,8 @@
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use chrono::{Days, Utc};
 use serenity::{
@@ -19,26 +23,26 @@ use crate::{commands::SlashCommand, config::AppConfig, message_storage::MessageS
 pub struct BotHandler {
     pub commands: Vec<Arc<dyn SlashCommand>>,
     pub app_config: AppConfig,
-    pub settings_file_path: String,
+    pub settings_file_path: PathBuf,
 }
 
 pub struct Configuration {
     pub observed_users: UserId,
     pub send_channels: HashMap<GuildId, ChannelId>,
     pub message_storage_path: PathBuf,
-    pub file_path: String,
+    pub file_path: PathBuf,
 }
 
 impl BotHandler {
     pub fn new(
         commands: &[Arc<dyn SlashCommand>],
         app_config: AppConfig,
-        file_path: &str,
+        file_path: &Path,
     ) -> BotHandler {
         BotHandler {
             commands: commands.into(),
             app_config: app_config,
-            settings_file_path: String::from(file_path),
+            settings_file_path: file_path.to_owned(),
         }
     }
 }
@@ -142,43 +146,44 @@ impl EventHandler for BotHandler {
         deleted_message_id: MessageId,
         guild_id: Option<GuildId>,
     ) {
-        if let Some(guild_id) = guild_id {
-            let message_storage =
-                match MessageStorage::load(&self.app_config.message_storage_path).await {
-                    Ok(storage) => storage,
-                    Err(why) => {
-                        error!("Failed to load message storage: {:?}", why);
-                        return;
-                    }
-                };
+        let guild_id = match guild_id {
+            Some(g) => g,
+            None => return,
+        };
 
-            let message = match message_storage
-                .messages
-                .iter()
-                .filter(|(_, m)| m.id == deleted_message_id)
-                .next()
-            {
-                Some(m) => m,
-                None => {
-                    warn!("Failed to get message out of storage. Message not found.");
+        let message_storage =
+            match MessageStorage::load(&self.app_config.message_storage_path).await {
+                Ok(storage) => storage,
+                Err(why) => {
+                    error!("Failed to load message storage: {:?}", why);
                     return;
                 }
             };
 
-            if let Some(target_channel) =
-                self.app_config.deleted_message_send_channels.get(&guild_id)
+        let (_, message) = match message_storage
+            .messages
+            .iter()
+            .filter(|(_, m)| m.id == deleted_message_id)
+            .next()
+        {
+            Some(m) => m,
+            None => {
+                warn!("Failed to get message out of storage. Message not found.");
+                return;
+            }
+        };
+
+        if let Some(target_channel) = self.app_config.deleted_message_send_channels.get(&guild_id) {
+            if let Err(why) = target_channel
+                .send_message(&ctx, |create_message| {
+                    create_message.content(&message.content)
+                })
+                .await
             {
-                if let Err(why) = target_channel
-                    .send_message(&ctx, |create_message| {
-                        create_message.content(&message.1.content)
-                    })
-                    .await
-                {
-                    error!(
-                        "Failed to send deleted message to channel, '{}': {}",
-                        target_channel.0, why
-                    );
-                }
+                error!(
+                    "Failed to send deleted message to channel, '{}': {}",
+                    target_channel.0, why
+                );
             }
         }
     }

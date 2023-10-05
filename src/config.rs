@@ -15,7 +15,7 @@ use crate::commands::CommandError;
 
 pub struct EnvironmentConfigurations {
     pub bot_token: String,
-    pub config_path: String,
+    pub config_path: PathBuf,
 }
 
 impl EnvironmentConfigurations {
@@ -26,7 +26,7 @@ impl EnvironmentConfigurations {
 
         EnvironmentConfigurations {
             bot_token: token,
-            config_path,
+            config_path:  PathBuf::from(config_path),
         }
     }
 }
@@ -39,7 +39,7 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    pub async fn load(file_path: &str) -> Result<Self, CommandError> {
+    pub async fn load(file_path: &Path) -> Result<Self, CommandError> {
         if !Path::new(file_path).exists() {
             AppConfig {
                 observed_user_id: UserId(0),
@@ -51,13 +51,12 @@ impl AppConfig {
         }
 
         let contents = fs::read_to_string(file_path).await?;
-
         let file: Self = serde_json::from_str(&contents)?;
 
         Ok(file)
     }
 
-    pub async fn save(&self, file_path: &str) -> Result<(), CommandError> {
+    pub async fn save(&self, file_path: &Path) -> Result<(), CommandError> {
         let serialized = serde_json::to_string(&self)?;
 
         let mut file = File::create(file_path).await?;

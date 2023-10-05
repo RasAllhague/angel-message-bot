@@ -23,7 +23,7 @@ async fn main() -> Result<(), CommandError> {
 
     let env_config = EnvironmentConfigurations::from_env();
 
-    if !Path::new(&env_config.config_path).exists() {
+    if !env_config.config_path.exists() {
         let app_config = AppConfig {
             deleted_message_send_channels: HashMap::new(),
             observed_user_id: UserId(714599597829390459),
