@@ -46,11 +46,14 @@ impl SlashCommand for ConfigCommand {
 
         let mut channels = configuration.send_channels.clone();
 
-        if let None = command.guild_id {
-            return Ok(());
-        }
+        let guild_id = match command.guild_id {
+            Some(g) => g,
+            None => return Err(CommandError::NoGuildId),
+        };
 
-        channels.insert(command.guild_id.unwrap(), channel_id);
+        if let Some(old_channel_id) = channels.insert(guild_id, channel_id) {
+            info!("Changing channel id from '{old_channel_id}' to '{channel_id}' for guild '{guild_id}'.");
+        }
 
         let app_config = AppConfig {
             deleted_message_send_channels: channels,
@@ -58,9 +61,9 @@ impl SlashCommand for ConfigCommand {
             message_storage_path: configuration.message_storage_path.clone(),
         };
 
-        info!("Updating config for guild: {:?}", command.guild_id);
+        info!("Updating config for guild: {guild_id}");
         app_config.save(&configuration.file_path).await?;
-        info!("Updated config for guild: {:?}", command.guild_id);
+        info!("Updated config for guild: {guild_id}");
 
         command
             .edit_original_interaction_response(ctx, |m| m.content("Updated!"))
@@ -78,7 +81,7 @@ impl ConfigCommand {
     fn build(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
         command
             .name(COMMAND_NAME)
-            .description("Command for nuking an entire channel with a timeout nuke.")
+            .description("Command for setting configurations.")
             .create_option(|sub_command| {
                 sub_command
                     .name("target-channel")
