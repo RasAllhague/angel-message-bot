@@ -13,8 +13,8 @@ pub struct MessageStorage {
 }
 
 impl MessageStorage {
-    pub async fn load(file_path: &str) -> Result<Self, CommandError> {
-        if !Path::new(file_path).exists() {
+    pub async fn load(file_path: &Path) -> Result<Self, CommandError> {
+        if !file_path.exists() {
             let storage = MessageStorage {
                 messages: Vec::new(),
             };
@@ -29,7 +29,7 @@ impl MessageStorage {
         Ok(file)
     }
 
-    pub async fn save(&self, file_path: &str) -> Result<(), CommandError> {
+    pub async fn save(&self, file_path: &Path) -> Result<(), CommandError> {
         let serialized = serde_json::to_string(&self)?;
 
         let mut file = File::create(file_path).await?;

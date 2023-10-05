@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc, path::PathBuf};
 
 use chrono::{Utc, Days};
 use serenity::{
@@ -14,9 +14,7 @@ use tracing::{
     log::{debug, error, warn},
 };
 
-use crate::{commands::SlashCommand, config::AppConfig, message_storage::{MessageStorage}};
-
-static FILENAME: &str = "message_storage.json";
+use crate::{commands::SlashCommand, config::AppConfig, message_storage::MessageStorage};
 
 pub struct BotHandler {
     pub commands: Vec<Arc<dyn SlashCommand>>,
@@ -27,6 +25,7 @@ pub struct BotHandler {
 pub struct Configuration {
     pub observed_users: UserId,
     pub send_channels: HashMap<GuildId, ChannelId>,
+    pub message_storage_path: PathBuf,
     pub file_path: String,
 }
 
@@ -57,6 +56,7 @@ impl EventHandler for BotHandler {
             let conf = Configuration {
                 observed_users: self.app_config.observed_user_id.clone(),
                 send_channels: self.app_config.deleted_message_send_channels.clone(),
+                message_storage_path: self.app_config.message_storage_path.clone(),
                 file_path: self.settings_file_path.clone(),
             };
 
@@ -100,7 +100,7 @@ impl EventHandler for BotHandler {
             return;
         }
 
-        let mut message_storage = match MessageStorage::load(FILENAME).await {
+        let mut message_storage = match MessageStorage::load(&self.app_config.message_storage_path).await {
             Ok(storage) => storage,
             Err(why) => {
                 error!("Failed to load message storage: {:?}", why);
@@ -127,7 +127,7 @@ impl EventHandler for BotHandler {
             }
         }
 
-        if let Err(why) = message_storage.save(FILENAME).await {
+        if let Err(why) = message_storage.save(&self.app_config.message_storage_path).await {
             error!("Failed to save message storage: {:?}", why);
         };
     }
@@ -140,7 +140,7 @@ impl EventHandler for BotHandler {
         guild_id: Option<GuildId>,
     ) {
         if let Some(guild_id) = guild_id {
-            let message_storage = match MessageStorage::load(FILENAME).await {
+            let message_storage = match MessageStorage::load(&self.app_config.message_storage_path).await {
                 Ok(storage) => storage,
                 Err(why) => {
                     error!("Failed to load message storage: {:?}", why);

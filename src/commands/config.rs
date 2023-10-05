@@ -55,6 +55,7 @@ impl SlashCommand for ConfigCommand {
         let app_config = AppConfig {
             deleted_message_send_channels: channels,
             observed_user_id: configuration.observed_users,
+            message_storage_path: configuration.message_storage_path.clone(),
         };
 
         info!("Updating config for guild: {:?}", command.guild_id);

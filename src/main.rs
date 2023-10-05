@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
 
 use commands::{config::ConfigCommand, CommandError, SlashCommand};
 use config::{AppConfig, EnvironmentConfigurations};
@@ -23,6 +23,7 @@ async fn main() -> Result<(), CommandError> {
         let app_config = AppConfig {
             deleted_message_send_channels: HashMap::new(),
             observed_user_id: UserId(714599597829390459),
+            message_storage_path: PathBuf::from("./message_storage.json"),
         };
 
         app_config.save(&env_config.config_path).await?;
