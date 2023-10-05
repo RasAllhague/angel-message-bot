@@ -1,4 +1,8 @@
-use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use commands::{config::ConfigCommand, CommandError, SlashCommand};
 use config::{AppConfig, EnvironmentConfigurations};
@@ -9,8 +13,8 @@ use tracing::{instrument, log::error};
 mod commands;
 mod config;
 mod handler;
-mod utils;
 mod message_storage;
+mod utils;
 
 #[tokio::main]
 #[instrument]

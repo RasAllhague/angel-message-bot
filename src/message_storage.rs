@@ -1,15 +1,18 @@
 use std::path::Path;
 
 use chrono::{DateTime, Utc};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serenity::model::prelude::Message;
-use tokio::{fs::{self, File}, io::AsyncWriteExt};
+use tokio::{
+    fs::{self, File},
+    io::AsyncWriteExt,
+};
 
 use crate::commands::CommandError;
 
 #[derive(Serialize, Deserialize)]
 pub struct MessageStorage {
-    pub messages: Vec<(DateTime<Utc>, Message)>
+    pub messages: Vec<(DateTime<Utc>, Message)>,
 }
 
 impl MessageStorage {

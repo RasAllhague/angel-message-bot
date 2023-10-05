@@ -1,8 +1,15 @@
-use std::{collections::HashMap, env, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    env,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 use serenity::model::prelude::{ChannelId, GuildId, UserId};
-use tokio::{fs::{File, self}, io::AsyncWriteExt};
+use tokio::{
+    fs::{self, File},
+    io::AsyncWriteExt,
+};
 
 use crate::commands::CommandError;
 
@@ -37,8 +44,10 @@ impl AppConfig {
             AppConfig {
                 observed_user_id: UserId(0),
                 deleted_message_send_channels: HashMap::new(),
-                message_storage_path: PathBuf::from("./message_storage.json")
-            }.save(file_path).await?;
+                message_storage_path: PathBuf::from("./message_storage.json"),
+            }
+            .save(file_path)
+            .await?;
         }
 
         let contents = fs::read_to_string(file_path).await?;

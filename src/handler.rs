@@ -1,11 +1,11 @@
-use std::{collections::HashMap, sync::Arc, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
-use chrono::{Utc, Days};
+use chrono::{Days, Utc};
 use serenity::{
     async_trait,
     model::prelude::{
-        command::Command, interaction::Interaction, ChannelId, GuildId, MessageId, Ready,
-        ResumedEvent, UserId, Message,
+        command::Command, interaction::Interaction, ChannelId, GuildId, Message, MessageId, Ready,
+        ResumedEvent, UserId,
     },
     prelude::{Context, EventHandler},
 };
@@ -100,16 +100,17 @@ impl EventHandler for BotHandler {
             return;
         }
 
-        let mut message_storage = match MessageStorage::load(&self.app_config.message_storage_path).await {
-            Ok(storage) => storage,
-            Err(why) => {
-                error!("Failed to load message storage: {:?}", why);
-                return;
-            }
-        };
+        let mut message_storage =
+            match MessageStorage::load(&self.app_config.message_storage_path).await {
+                Ok(storage) => storage,
+                Err(why) => {
+                    error!("Failed to load message storage: {:?}", why);
+                    return;
+                }
+            };
 
         message_storage.messages.push((Utc::now(), new_message));
-        
+
         for index in 0..message_storage.messages.len() {
             let (created, _) = message_storage.messages[index].clone();
 
@@ -120,14 +121,16 @@ impl EventHandler for BotHandler {
                     message_storage.messages.remove(index);
                     info!("C:{created}/S:{subdate}");
                 }
-            }
-            else {
+            } else {
                 message_storage.messages.remove(index);
                 info!("Fall2");
             }
         }
 
-        if let Err(why) = message_storage.save(&self.app_config.message_storage_path).await {
+        if let Err(why) = message_storage
+            .save(&self.app_config.message_storage_path)
+            .await
+        {
             error!("Failed to save message storage: {:?}", why);
         };
     }
@@ -140,21 +143,27 @@ impl EventHandler for BotHandler {
         guild_id: Option<GuildId>,
     ) {
         if let Some(guild_id) = guild_id {
-            let message_storage = match MessageStorage::load(&self.app_config.message_storage_path).await {
-                Ok(storage) => storage,
-                Err(why) => {
-                    error!("Failed to load message storage: {:?}", why);
-                    return;
-                }
-            };
+            let message_storage =
+                match MessageStorage::load(&self.app_config.message_storage_path).await {
+                    Ok(storage) => storage,
+                    Err(why) => {
+                        error!("Failed to load message storage: {:?}", why);
+                        return;
+                    }
+                };
 
-            let message = match message_storage.messages.iter().filter(|(_, m)| m.id == deleted_message_id).next() {
+            let message = match message_storage
+                .messages
+                .iter()
+                .filter(|(_, m)| m.id == deleted_message_id)
+                .next()
+            {
                 Some(m) => m,
                 None => {
                     warn!("Failed to get message out of storage. Message not found.");
                     return;
                 }
-            }; 
+            };
 
             if let Some(target_channel) =
                 self.app_config.deleted_message_send_channels.get(&guild_id)
