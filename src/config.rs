@@ -26,7 +26,7 @@ impl EnvironmentConfigurations {
 
         EnvironmentConfigurations {
             bot_token: token,
-            config_path:  PathBuf::from(config_path),
+            config_path: PathBuf::from(config_path),
         }
     }
 }

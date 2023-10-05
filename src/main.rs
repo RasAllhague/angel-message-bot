@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use commands::{config::ConfigCommand, CommandError, SlashCommand};
 use config::{AppConfig, EnvironmentConfigurations};

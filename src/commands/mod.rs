@@ -33,7 +33,7 @@ pub enum CommandError {
     Parser(ParserError),
     Serenity(serenity::Error),
     IO(std::io::Error),
-    NoGuildId
+    NoGuildId,
 }
 
 impl From<serde_json::Error> for CommandError {
