@@ -41,7 +41,7 @@ impl BotHandler {
     ) -> BotHandler {
         BotHandler {
             commands: commands.into(),
-            app_config: app_config,
+            app_config,
             settings_file_path: file_path.to_owned(),
         }
     }
@@ -58,7 +58,7 @@ impl EventHandler for BotHandler {
             }
 
             let conf = Configuration {
-                observed_users: self.app_config.observed_user_id.clone(),
+                observed_users: self.app_config.observed_user_id,
                 send_channels: self.app_config.deleted_message_send_channels.clone(),
                 message_storage_path: self.app_config.message_storage_path.clone(),
                 file_path: self.settings_file_path.clone(),
@@ -163,8 +163,7 @@ impl EventHandler for BotHandler {
         let (_, message) = match message_storage
             .messages
             .iter()
-            .filter(|(_, m)| m.id == deleted_message_id)
-            .next()
+            .find(|(_, m)| m.id == deleted_message_id)
         {
             Some(m) => m,
             None => {

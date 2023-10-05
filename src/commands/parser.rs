@@ -16,10 +16,8 @@ impl OptionParser {
         index: usize,
     ) -> Result<ChannelId, ParserError> {
         if let Some(option) = options.get(index) {
-            if let Some(value) = option.resolved.as_ref() {
-                if let CommandDataOptionValue::Channel(data) = value {
-                    return Ok(data.id);
-                }
+            if let Some(CommandDataOptionValue::Channel(data)) = option.resolved.as_ref() {
+                return Ok(data.id);
             }
         }
 

@@ -30,8 +30,7 @@ async fn main() -> Result<(), CommandError> {
 
     let app_config = AppConfig::load(&env_config.config_path).await?;
 
-    let mut commands: Vec<Arc<dyn SlashCommand>> = Vec::new();
-    commands.push(Arc::new(ConfigCommand));
+    let commands: Vec<Arc<dyn SlashCommand>> = vec![Arc::new(ConfigCommand)];
 
     let intents = GatewayIntents::default()
         | GatewayIntents::MESSAGE_CONTENT
