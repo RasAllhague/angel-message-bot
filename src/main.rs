@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::Arc,
 };
 
@@ -14,7 +14,6 @@ mod commands;
 mod config;
 mod handler;
 mod message_storage;
-mod utils;
 
 #[tokio::main]
 #[instrument]
